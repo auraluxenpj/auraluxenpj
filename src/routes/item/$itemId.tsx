@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, ImageOff, Ruler, Share2, ShoppingBag, Store, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, ImageOff, PartyPopper, Ruler, Share2, ShoppingBag, Store, Truck, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { Item } from '../../../db/schema'
 import { getItem } from '@/server/catalog.functions'
@@ -10,6 +10,9 @@ import { CompleteTheLook } from '@/components/CompleteTheLook'
 import { RecentlyViewed } from '@/components/RecentlyViewed'
 import { WishlistButton } from '@/components/WishlistButton'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
+import { usePromo } from '@/components/Promo'
+import { bestOfferFor } from '@/lib/pricing'
+import { discountLabel } from '@/lib/promo'
 import { cdn, cdnSet, crossedPrice, discountPercent, enquiryMessage, formatPrice, itemBadge, whatsappLink } from '@/lib/format'
 import { PRODUCT_DISCLAIMER, descriptionText, isSoldOut, lookFor, similarItems, sortSizes, stockOf } from '@/lib/catalog'
 import { categoryLabel, useSite } from '@/lib/site'
@@ -153,6 +156,7 @@ function ItemPage() {
               </>
             )}
           </p>
+          <OfferHint item={item} />
           {soldOut && <p className="mt-2 text-sm font-medium text-sale">Currently sold out — ask us about restocks or similar pieces.</p>}
 
           {item.colors.length > 0 && (
@@ -470,5 +474,40 @@ function NotFound() {
         </div>
       </Wrap>
     </SiteLayout>
+  )
+}
+
+/** Festive price for this piece and the free-delivery threshold — the same rules checkout applies. */
+function OfferHint({ item }: { item: Item }) {
+  const { automatic, free } = usePromo()
+  const best = bestOfferFor(item, automatic)
+  if (!best && !free) return null
+  return (
+    <div className="mt-3 space-y-1.5 text-sm">
+      {best && (
+        <p className="flex items-start gap-2 rounded-md bg-gold-soft/30 px-3 py-2">
+          <PartyPopper className="mt-0.5 size-4 shrink-0 text-gold-deep" />
+          <span>
+            <span className="font-semibold">{best.rule.name}:</span>{' '}
+            {best.needsMore ? (
+              <>
+                extra {discountLabel(best.rule)} on orders above {formatPrice(best.rule.minPurchase)}
+              </>
+            ) : (
+              <>
+                pay <span className="font-semibold">{formatPrice(best.price)}</span> with {discountLabel(best.rule)}
+                {best.rule.minPurchase > 0 ? ` (orders above ${formatPrice(best.rule.minPurchase)})` : ''} — applied automatically in your bag
+              </>
+            )}
+          </span>
+        </p>
+      )}
+      {free && (
+        <p className="flex items-center gap-2 text-muted">
+          <Truck className="size-4 shrink-0 text-gold-deep" /> FREE DELIVERY on orders over {formatPrice(free.min)}
+          {free.zoneIds.length ? ' in selected areas' : ''}
+        </p>
+      )}
+    </div>
   )
 }

@@ -72,5 +72,8 @@ export const checkoutSchema = z.object({
   transactionId: text(60),
   paymentDate: z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid payment date')]),
   lines: cartSchema,
+  couponCode: z.string().trim().max(30).regex(/^[A-Za-z0-9_-]*$/, 'Invalid coupon code').default(''),
+  // The total the customer saw (and paid); the server rejects the order if its own total differs
+  expectedTotal: z.number().int().nonnegative().optional(),
 })
 export type CheckoutInput = z.infer<typeof checkoutSchema>

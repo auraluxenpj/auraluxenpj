@@ -7,6 +7,7 @@ import { bagMessage, cdn, formatPrice, whatsappLink } from '@/lib/format'
 import { sizeKeys, sortSizes, stockOf } from '@/lib/catalog'
 import { priceCart } from '@/lib/pricing'
 import { useSite } from '@/lib/site'
+import { CartMessages, FreeDeliveryNote, PriceBreakdown, usePromo } from '@/components/Promo'
 import { bag, placedOrders, qtyOf, removeFromBag, setBagOption, setBagQty } from '@/lib/store'
 
 export const Route = createFileRoute('/bag')({
@@ -24,7 +25,11 @@ function BagPage() {
   const recentOrders = placedOrders.use()
   const byId = new Map(items.map((i) => [i.id, i]))
   const lines = entries.map((e, index) => ({ ...e, qty: qtyOf(e), index, item: byId.get(e.id) })).filter((l) => l.item != null)
-  const quote = priceCart(lines.map((l) => ({ id: l.id, size: l.size, colour: l.colour, qty: l.qty })), items, 0)
+  const promo = usePromo()
+  // Preview with automatic offers and the standard delivery charge; checkout re-prices on the server
+  const quote = priceCart(lines.map((l) => ({ id: l.id, size: l.size, colour: l.colour, qty: l.qty })), items, { offers: promo.automatic, delivery: promo.delivery })
+  const zoned = promo.delivery.zones.length > 0
+  const deliveryShown = !zoned ? quote.deliveryCharge : quote.freeDelivery?.qualifies && !promo.delivery.free?.zoneIds.length ? 0 : null
   const origin = typeof window === 'undefined' ? '' : window.location.origin
   const pieces = lines.reduce((n, l) => n + l.qty, 0)
   const hasOnRequest = lines.some((l) => l.item!.price == null)
@@ -135,26 +140,24 @@ function BagPage() {
             </ul>
 
             <aside className="rounded-lg border border-sand bg-white p-5 lg:sticky lg:top-24">
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-muted">Subtotal ({pieces} {pieces === 1 ? 'piece' : 'pieces'})</dt>
-                  <dd>{formatPrice(quote.subtotal)}</dd>
-                </div>
-                {quote.discount > 0 && (
-                  <div className="flex justify-between text-sale">
-                    <dt>Discount</dt>
-                    <dd>− {formatPrice(quote.discount)}</dd>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <dt className="text-muted">Delivery</dt>
-                  <dd className="text-muted">At checkout</dd>
-                </div>
-                <div className="flex items-baseline justify-between border-t border-sand pt-3">
-                  <dt className="font-medium">Total before delivery</dt>
-                  <dd className="text-lg font-semibold">{formatPrice(quote.total)}</dd>
-                </div>
-              </dl>
+              <p className="mb-3 text-xs text-muted">{pieces} {pieces === 1 ? 'piece' : 'pieces'}</p>
+              <PriceBreakdown
+                b={{
+                  subtotal: quote.subtotal,
+                  saleDiscount: quote.saleDiscount,
+                  offer: quote.offer,
+                  coupon: null,
+                  deliveryCharge: deliveryShown,
+                  deliveryWaived: zoned ? 0 : quote.deliveryWaived,
+                  total: deliveryShown == null ? quote.merchandise : quote.merchandise + deliveryShown,
+                  totalLabel: deliveryShown == null ? 'Total before delivery' : 'Total',
+                }}
+              />
+              <div className="mt-3 space-y-2">
+                <FreeDeliveryNote progress={quote.freeDelivery} knownCity={false} />
+                <CartMessages />
+                <p className="text-xs text-muted">Have a coupon code? Apply it at checkout.{zoned ? ' Delivery is worked out from your city at checkout.' : ''}</p>
+              </div>
               {quote.ok ? (
                 <Link to="/checkout" className="btn btn-dark mt-5 min-h-12 w-full">
                   Proceed to checkout <ArrowRight className="size-4" />

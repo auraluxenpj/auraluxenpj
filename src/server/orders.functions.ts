@@ -38,8 +38,15 @@ export const getCheckoutSettings = createServerFn({ method: 'GET' }).handler(asy
 
 /** Re-price the bag from the database so checkout shows live prices and stock. */
 export const getCartQuote = createServerFn({ method: 'POST' })
-  .inputValidator(z.object({ lines: cartSchema }))
-  .handler(({ data }) => quoteCart(data.lines))
+  .inputValidator(
+    z.object({
+      lines: cartSchema,
+      couponCode: z.string().trim().max(30).optional(),
+      city: z.string().trim().max(60).optional(),
+      phone: z.string().trim().max(20).optional(),
+    }),
+  )
+  .handler(({ data }) => quoteCart(data.lines, data))
 
 export const getCustomerOrder = createServerFn({ method: 'GET' })
   .inputValidator(z.object({ number: z.string().max(20), token: z.string().max(64) }))
@@ -95,7 +102,8 @@ export const savePaymentSettings = createServerFn({ method: 'POST' })
       payment_qr: z.string().trim().max(300).refine((v) => v === '' || v.startsWith('/api/images/'), 'Upload the QR code image'),
       payment_instructions: line(1000),
       payment_confirmation_message: line(1000),
-      delivery_charge: z.string().trim().regex(/^\d{0,6}$/, 'Delivery charge must be a whole number of rupees'),
+      // Edited with the other delivery settings in Admin → Offers; only written when sent
+      delivery_charge: z.string().trim().regex(/^\d{0,6}$/, 'Delivery charge must be a whole number of rupees').optional(),
       proof_max_mb: z
         .string()
         .trim()
@@ -105,8 +113,8 @@ export const savePaymentSettings = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await requireAdmin()
     const before = await loadPaymentSettings()
-    const values = { ...data, delivery_charge: String(Number(data.delivery_charge) || 0) }
-    for (const key of PAYMENT_KEYS) await putSetting(key, values[key])
+    const values = { ...data, delivery_charge: data.delivery_charge == null ? before.delivery_charge : String(Number(data.delivery_charge) || 0) }
+    for (const key of PAYMENT_KEYS) if (key !== 'delivery_charge' || data.delivery_charge != null) await putSetting(key, values[key])
     if (before.payment_qr && before.payment_qr !== values.payment_qr) await deleteUploadedImages([before.payment_qr])
     return values
   })

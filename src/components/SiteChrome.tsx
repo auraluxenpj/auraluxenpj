@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { ArrowRight, Heart, Home, Menu, Search, ShoppingBag, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { WhatsAppIcon } from './WhatsAppIcon'
+import { AnnouncementBar } from './Promo'
 import { GREETING, cdn, formatPhone, formatPrice, whatsappLink } from '@/lib/format'
 import { searchItems } from '@/lib/catalog'
 import { useSite } from '@/lib/site'
@@ -29,6 +30,7 @@ export function SiteLayout({
       <a href="#main" className="sr-only z-[80] rounded-md bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2">
         Skip to content
       </a>
+      <AnnouncementBar />
       <SiteHeader />
       <main id="main" className="flex-1">
         {children}

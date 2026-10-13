@@ -5,7 +5,10 @@ import { db } from '../../db/index.js'
 import { getSetting } from './auth.server'
 import { items, orderItems, orders, payments, settings } from '../../db/schema.js'
 import { FREE_SIZE } from '@/lib/catalog'
+import { formatPrice } from '@/lib/format'
 import { priceCart } from '@/lib/pricing'
+import { DEFAULT_DELIVERY } from '@/lib/promo'
+import { pricingContext } from './promo.server'
 import { PROOF_MAX_MB_DEFAULT, PROOF_MAX_MB_LIMIT, RELEASES_STOCK, normalizePhone } from '@/lib/orders'
 import type { CartLine, CheckoutInput, OrderStatus } from '@/lib/orders'
 
@@ -28,8 +31,6 @@ export const PAYMENT_KEYS = [
 export type PaymentKey = (typeof PAYMENT_KEYS)[number]
 export type PaymentSettings = Record<PaymentKey, string>
 
-const DEFAULT_DELIVERY = 100
-
 export async function loadPaymentSettings(): Promise<PaymentSettings> {
   const rows = await db.select().from(settings).where(inArray(settings.key, [...PAYMENT_KEYS]))
   const found = new Map(rows.map((r) => [r.key, r.value]))
@@ -48,10 +49,14 @@ export const paymentConfigured = (s: PaymentSettings) => Boolean(s.payment_qr ||
 
 /* ---------- Pricing (always from the database) ---------- */
 
-export async function quoteCart(lines: CartLine[]) {
+export async function quoteCart(lines: CartLine[], opts: { couponCode?: string; city?: string; phone?: string } = {}) {
   const ids = [...new Set(lines.map((l) => l.id))]
-  const [rows, payment] = await Promise.all([db.select().from(items).where(inArray(items.id, ids)), loadPaymentSettings()])
-  return priceCart(lines, rows, deliveryChargeOf(payment))
+  const phone = opts.phone ? normalizePhone(opts.phone) : null
+  const [rows, ctx] = await Promise.all([
+    db.select().from(items).where(inArray(items.id, ids)),
+    pricingContext(db, { couponCode: opts.couponCode, phone, city: opts.city }),
+  ])
+  return priceCart(lines, rows, ctx)
 }
 
 /* ---------- Payment proofs (private Blob store) ---------- */
@@ -128,9 +133,20 @@ export async function placeOrder(
     return await db.transaction(async (tx) => {
       const ids = [...new Set(input.lines.map((l) => l.id))]
       const rows = await tx.select().from(items).where(inArray(items.id, ids)).for('update')
-      const quote = priceCart(input.lines, rows, deliveryChargeOf(payment))
+      // Offers are locked too, so two orders can't both take the last use of a limited coupon
+      const ctx = await pricingContext(tx, { couponCode: input.couponCode, phone, city: c.city, lock: true })
+      const quote = priceCart(input.lines, rows, ctx)
       const problem = quote.lines.find((l) => l.error)
       if (problem) throw new CheckoutError(`${problem.name}: ${problem.error}`)
+      if (input.couponCode && !quote.coupon) {
+        throw new CheckoutError(`Coupon ${input.couponCode.toUpperCase()}: ${quote.couponError ?? 'it can’t be used on this order.'} Remove it or try another code.`)
+      }
+      // The customer paid the amount they were shown; never silently charge a different one
+      if (input.expectedTotal != null && input.expectedTotal !== quote.total) {
+        throw new CheckoutError(
+          `Your order total is now ${formatPrice(quote.total)} (it was ${formatPrice(input.expectedTotal)}) because an offer, coupon or delivery charge changed. Please check the updated summary. If you’ve already paid, place the order and message us on WhatsApp — we’ll adjust the difference.`,
+        )
+      }
 
       let order: typeof orders.$inferSelect | undefined
       for (let attempt = 0; !order && attempt < 5; attempt++) {
@@ -152,6 +168,14 @@ export async function placeOrder(
             deliveryCharge: quote.deliveryCharge,
             discount: quote.discount,
             total: quote.total,
+            offerId: quote.offer?.id ?? null,
+            offerName: quote.offer?.name ?? '',
+            offerDiscount: quote.offer?.amount ?? 0,
+            couponId: quote.coupon?.id ?? null,
+            couponCode: quote.coupon?.code ?? '',
+            couponDiscount: quote.coupon?.amount ?? 0,
+            deliveryWaived: quote.deliveryWaived,
+            deliveryZone: quote.deliveryZone,
             paymentMethod: input.paymentMethod,
             paymentStatus: 'submitted',
             status: 'payment_verification',

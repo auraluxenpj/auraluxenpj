@@ -18,6 +18,7 @@ AuraLuxe catalog: a boutique lookbook where customers browse pieces and enquire 
 | Admin | `src/routes/admin.tsx` |
 | Shared UI | `src/components/` (`SiteChrome` header/footer/floating button, `ItemCard`, `WhatsAppIcon`) |
 | Formatting, WhatsApp links, Image CDN URLs | `src/lib/format.ts`; client-side photo downscale + upload in `src/lib/upload.ts` |
+| Offers, coupons, delivery zones, free delivery | rules/validation `src/lib/promo.ts`; DB/usage limits/storefront data `src/server/promo.server.ts`; admin RPC `src/server/promo.functions.ts`; admin UI `src/components/OffersAdmin.tsx` (Admin → Offers & Discounts); storefront banner/announcement bar/summary `src/components/Promo.tsx` |
 | Theme tokens (colours, fonts) | `@theme` block in `src/styles.css` |
 
 ## Key decisions
@@ -35,6 +36,11 @@ AuraLuxe catalog: a boutique lookbook where customers browse pieces and enquire 
 - **Order statuses** are in `ORDER_STATUSES` (`src/lib/orders.ts`). New orders start at `payment_verification`. Moving to `cancelled`/`payment_rejected` returns units to stock (`orders.stock_reserved`); moving back re-reserves them. Customers can only view an order with its secret link `/order/<number>?t=<access_token>`.
 - **Payment proofs** live in the private `payment-proofs` Blob store (JPG/PNG/PDF, checked by magic bytes, max `settings.proof_max_mb` ≤ 5 MB because of the 6 MB function body limit) and are only served to admins via `/api/payment-proof/<paymentId>`.
 - **Payment settings** (`bank_name`, `bank_account_name`, `bank_account_number`, `bank_branch`, `payment_qr`, `payment_instructions`, `payment_confirmation_message`, `delivery_charge`, `proof_max_mb`) are `settings` rows edited in Admin → Orders. Checkout stays closed until a QR or bank name + account number is set. The QR is uploaded with `uploadImage(file, { crop: false })`.
+- **Offers** (`offers` table): `kind` `automatic` (applies itself; best one wins) or `coupon` (code, stored upper-case). Percent (≤90, optional `max_discount`) or fixed rupees, `min_purchase` on eligible pieces, scope all/products/categories, exclusions, `exclude_sale`, date window, per-customer (by phone) and total limits — cancelled/rejected orders don't count. A coupon only combines with an automatic offer when `stackable`; otherwise the bigger discount wins. All pricing goes through `priceCart(lines, rows, ctx)` with a `PricingContext` from `pricingContext()`; `placeOrder` locks the offer rows and rejects the order if its total differs from the `expectedTotal` the customer saw.
+- **Orders keep promo snapshots** (`offer_name/discount`, `coupon_code/discount`, `delivery_waived`, `delivery_zone`); `orders.discount` = sale savings + offer + coupon, so `total = subtotal − discount + delivery_charge`. Pausing or deleting an offer never changes past orders.
+- **Delivery**: `settings.delivery_charge` (standard), `delivery_zones` (JSON, matched case-insensitively on the checkout city), `free_delivery` (JSON: threshold after discounts, dates, product/category scope, zone ids where `default` = unmatched cities). Edited in Admin → Offers & Discounts, not Payment settings.
+- **Storefront promo data** comes from the root loader (`promo`): live automatic offers, advertised coupons (banner/announcement on — otherwise codes stay secret) and upcoming bannered offers. Banner/announcement text supports `{discount} {code} {min} {max} {ends} {free_delivery_min}`.
+- Admin changes to offers/delivery are written to `audit_log`.
 - Items with `published = false` are hidden from the storefront but visible in admin; `featured` items sort first and show a "Signature" badge.
 
 ## Conventions

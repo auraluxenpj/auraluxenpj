@@ -7,6 +7,7 @@ import { cdn, formatPrice, whatsappLink } from '@/lib/format'
 import { FREE_SIZE } from '@/lib/catalog'
 import { PAYMENT_METHODS, PAYMENT_STATUS_LABEL, statusLabel } from '@/lib/orders'
 import { getCustomerOrder } from '@/server/orders.functions'
+import { PriceBreakdown, orderBreakdown } from '@/components/Promo'
 
 export const Route = createFileRoute('/order/$number')({
   validateSearch: (search: Record<string, unknown>): { t?: string } => ({
@@ -88,16 +89,12 @@ function OrderPage() {
               </li>
             ))}
           </ul>
-          <dl className="space-y-2 border-t border-sand pt-3 text-sm">
-            <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd>{formatPrice(order.subtotal)}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Delivery</dt><dd>{order.deliveryCharge ? formatPrice(order.deliveryCharge) : 'Free'}</dd></div>
-            {order.discount > 0 && <div className="flex justify-between text-sale"><dt>Discount</dt><dd>− {formatPrice(order.discount)}</dd></div>}
-            <div className="flex items-baseline justify-between border-t border-sand pt-3">
-              <dt className="font-medium">Total</dt>
-              <dd className="text-xl font-semibold">{formatPrice(order.total)}</dd>
-            </div>
-            <div className="flex justify-between pt-1 text-xs"><dt className="text-muted">Payment method</dt><dd>{PAYMENT_METHODS[order.paymentMethod as keyof typeof PAYMENT_METHODS] ?? order.paymentMethod}</dd></div>
-          </dl>
+          <div className="border-t border-sand pt-3">
+            <PriceBreakdown b={orderBreakdown(order)} />
+            <dl className="mt-2 text-xs">
+              <div className="flex justify-between"><dt className="text-muted">Payment method</dt><dd>{PAYMENT_METHODS[order.paymentMethod as keyof typeof PAYMENT_METHODS] ?? order.paymentMethod}</dd></div>
+            </dl>
+          </div>
         </section>
 
         <section className="mt-6 rounded-lg border border-sand bg-white p-5 sm:p-6">
