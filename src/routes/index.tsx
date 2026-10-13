@@ -5,6 +5,7 @@ import type { Item } from '../../db/schema'
 import { SiteLayout } from '@/components/SiteChrome'
 import { ProductRail, SectionHeader, Wrap, underlineLink } from '@/components/Section'
 import { CompleteTheLook } from '@/components/CompleteTheLook'
+import { PromoBanner, usePromo } from '@/components/Promo'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { GREETING, PRICE_RANGES, cdn, cdnSet, crossedPrice, discountPercent, whatsappLink } from '@/lib/format'
 import { OCCASIONS, inPriceRange, isOnOffer, lookFor, newestFirst } from '@/lib/catalog'
@@ -46,11 +47,19 @@ function Home() {
   const tagged = items.filter((i) => i.badge === 'trending' || i.badge === 'bestseller')
   const trending = (tagged.length ? tagged : items.filter((i) => i.featured)).slice(0, 8)
   const lookItem = items.find((i) => lookFor(i, items).length > 0)
+  const promo = usePromo()
+  const hasBanner = Boolean(promo.banner || promo.upcoming[0]?.startsAt)
 
   return (
     <SiteLayout>
       <h1 className="sr-only">Aura Luxe — women’s fashion boutique</h1>
       <Hero offers={offers} />
+
+      {hasBanner && (
+        <Wrap className="mt-10 md:mt-14">
+          <PromoBanner />
+        </Wrap>
+      )}
 
       <Categories />
 

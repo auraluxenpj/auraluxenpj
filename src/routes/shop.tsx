@@ -6,6 +6,7 @@ import { SiteLayout } from '@/components/SiteChrome'
 import { ItemGrid } from '@/components/ItemCard'
 import { Wrap } from '@/components/Section'
 import { RecentlyViewed } from '@/components/RecentlyViewed'
+import { PromoBanner, usePromo } from '@/components/Promo'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { PRICE_RANGES, whatsappLink } from '@/lib/format'
 import {
@@ -68,6 +69,8 @@ function Shop() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: '/shop' })
   const [sheet, setSheet] = useState(false)
+  const promo = usePromo()
+  const hasBanner = Boolean(promo.banner || promo.upcoming[0]?.startsAt)
 
   const update = (patch: Partial<ShopSearch>) =>
     navigate({
@@ -176,6 +179,12 @@ function Shop() {
             </button>
           )}
         </div>
+
+        {hasBanner && !q && (
+          <div className="mt-5">
+            <PromoBanner compact />
+          </div>
+        )}
 
         <div className="no-scrollbar -mx-4 mt-5 flex gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:hidden lg:px-0">
           {collections.map((col) => (

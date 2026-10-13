@@ -57,6 +57,64 @@ export const settings = pgTable('settings', {
 })
 
 /*
+ * Festive offers. kind 'automatic' applies itself to eligible bags; kind 'coupon' needs its code at checkout.
+ * Live = active && now within [starts_at, ends_at) && under total_limit. See src/lib/promo.ts.
+ */
+export const offers = pgTable('offers', {
+  id: serial().primaryKey(),
+  name: text().notNull(),
+  kind: text().notNull().default('automatic'),
+  // Upper-cased coupon code, null for automatic offers
+  code: text().unique(),
+  // 'percent' | 'fixed' (whole rupees)
+  discountType: text('discount_type').notNull().default('percent'),
+  discountValue: integer('discount_value').notNull(),
+  minPurchase: integer('min_purchase').notNull().default(0),
+  // Cap for percentage discounts (null = no cap)
+  maxDiscount: integer('max_discount'),
+  startsAt: timestamp('starts_at', { withTimezone: true }),
+  endsAt: timestamp('ends_at', { withTimezone: true }),
+  active: boolean().notNull().default(true),
+  // 'all' | 'products' | 'categories'
+  scope: text().notNull().default('all'),
+  productIds: integer('product_ids').array().notNull().default([]),
+  categoryIds: integer('category_ids').array().notNull().default([]),
+  excludeProductIds: integer('exclude_product_ids').array().notNull().default([]),
+  // Skip pieces already on sale (crossed-out price) or in clearance
+  excludeSale: boolean('exclude_sale').notNull().default(false),
+  perCustomerLimit: integer('per_customer_limit'),
+  totalLimit: integer('total_limit'),
+  // Coupons only: may be used on top of an automatic offer
+  stackable: boolean().notNull().default(false),
+  // Marketing
+  showBanner: boolean('show_banner').notNull().default(false),
+  bannerTitle: text('banner_title').notNull().default(''),
+  bannerText: text('banner_text').notNull().default(''),
+  bannerImage: text('banner_image').notNull().default(''),
+  ctaText: text('cta_text').notNull().default(''),
+  announcement: text().notNull().default(''),
+  showCountdown: boolean('show_countdown').notNull().default(false),
+  cartMessage: text('cart_message').notNull().default(''),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+/** Record of admin changes to promotions and delivery settings. */
+export const auditLog = pgTable(
+  'audit_log',
+  {
+    id: serial().primaryKey(),
+    action: text().notNull(),
+    entity: text().notNull(),
+    entityId: integer('entity_id'),
+    summary: text().notNull(),
+    details: jsonb().$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [index('audit_log_created_at_idx').on(t.createdAt)],
+)
+
+/*
  * Orders: created at checkout with prices and totals computed on the server.
  * status is the fulfilment pipeline (see ORDER_STATUSES in src/lib/orders.ts).
  */
@@ -90,6 +148,17 @@ export const orders = pgTable(
     adminNotes: text('admin_notes').notNull().default(''),
     // Salted hash of the customer's IP, only used to rate-limit order spam
     clientHash: text('client_hash').notNull().default(''),
+    // Promotions applied at checkout (snapshots, so history survives an offer being edited or deleted).
+    // discount = sale-price savings + offer_discount + coupon_discount
+    offerId: integer('offer_id').references(() => offers.id, { onDelete: 'set null' }),
+    offerName: text('offer_name').notNull().default(''),
+    offerDiscount: integer('offer_discount').notNull().default(0),
+    couponId: integer('coupon_id').references(() => offers.id, { onDelete: 'set null' }),
+    couponCode: text('coupon_code').notNull().default(''),
+    couponDiscount: integer('coupon_discount').notNull().default(0),
+    // Delivery charge the customer would have paid without the free-delivery promotion
+    deliveryWaived: integer('delivery_waived').notNull().default(0),
+    deliveryZone: text('delivery_zone').notNull().default(''),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -97,6 +166,8 @@ export const orders = pgTable(
     index('orders_created_at_idx').on(t.createdAt),
     index('orders_client_hash_idx').on(t.clientHash, t.createdAt),
     index('orders_phone_idx').on(t.phone, t.createdAt),
+    index('orders_offer_idx').on(t.offerId),
+    index('orders_coupon_idx').on(t.couponId),
   ],
 )
 
@@ -142,3 +213,5 @@ export type Item = typeof items.$inferSelect
 export type Order = typeof orders.$inferSelect
 export type OrderItem = typeof orderItems.$inferSelect
 export type Payment = typeof payments.$inferSelect
+export type Offer = typeof offers.$inferSelect
+export type AuditEntry = typeof auditLog.$inferSelect

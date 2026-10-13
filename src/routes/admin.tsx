@@ -2,6 +2,7 @@ import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
 import {
   Check,
   ExternalLink,
+  Gift,
   Eye,
   EyeOff,
   ImagePlus,
@@ -50,13 +51,15 @@ import { cdn, discountPercent, formatPhone, formatPrice } from '@/lib/format'
 import { FREE_SIZE, OCCASIONS, isSoldOut, sizeKeys, sortSizes, stockOf } from '@/lib/catalog'
 import { uploadImage } from '@/lib/upload'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
+import { OffersTab } from '@/components/OffersAdmin'
+import { PriceBreakdown, orderBreakdown } from '@/components/Promo'
 
-type AdminSearch = { reset?: string; tab?: 'orders' }
+type AdminSearch = { reset?: string; tab?: 'orders' | 'offers' }
 
 export const Route = createFileRoute('/admin')({
   validateSearch: (search: Record<string, unknown>): AdminSearch => ({
     reset: typeof search.reset === 'string' ? search.reset : undefined,
-    tab: search.tab === 'orders' ? 'orders' : undefined,
+    tab: search.tab === 'orders' || search.tab === 'offers' ? search.tab : undefined,
   }),
   head: () => ({ meta: [{ title: 'Shop admin — AuraLuxe' }, { name: 'robots', content: 'noindex' }] }),
   loader: () => getAdminState(),
@@ -70,7 +73,7 @@ function AdminPage() {
   const { reset } = Route.useSearch()
   if (reset && state.hasPassword) return <ResetScreen token={reset} />
   if (!state.loggedIn || !state.catalog) return <AuthScreen setup={!state.hasPassword} recoveryHint={state.recoveryEmail} />
-  return <Dashboard catalog={state.catalog} recoveryEmail={state.recoveryEmail} orders={state.orders} payment={state.payment!} />
+  return <Dashboard catalog={state.catalog} recoveryEmail={state.recoveryEmail} orders={state.orders} payment={state.payment!} promo={state.promo!} />
 }
 
 /* ---------------- Auth ---------------- */
@@ -209,7 +212,9 @@ type Catalog = { categories: Category[]; items: Item[]; whatsapp: string; store:
 
 type OrderRow = Awaited<ReturnType<typeof getAdminState>>['orders'][number]
 
-function Dashboard({ catalog, recoveryEmail, orders, payment }: { catalog: Catalog; recoveryEmail: string; orders: OrderRow[]; payment: PaymentSettings }) {
+type Promo = NonNullable<Awaited<ReturnType<typeof getAdminState>>['promo']>
+
+function Dashboard({ catalog, recoveryEmail, orders, payment, promo }: { catalog: Catalog; recoveryEmail: string; orders: OrderRow[]; payment: PaymentSettings; promo: Promo }) {
   const router = useRouter()
   const { tab } = Route.useSearch()
   const toReview = orders.filter((o) => o.status === 'payment_verification').length
@@ -251,10 +256,15 @@ function Dashboard({ catalog, recoveryEmail, orders, payment }: { catalog: Catal
           <Package className="size-4" /> Orders
           {toReview > 0 && <span className="rounded-full bg-gold px-1.5 text-[0.65rem] font-semibold text-ink">{toReview}</span>}
         </Link>
+        <Link to="/admin" search={{ tab: 'offers' }} className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm transition ${tab === 'offers' ? 'bg-plum text-ivory' : 'text-muted hover:text-plum'}`}>
+          <Gift className="size-4" /> <span className="hidden sm:inline">Offers &amp; Discounts</span><span className="sm:hidden">Offers</span>
+        </Link>
       </nav>
 
       {tab === 'orders' ? (
         <OrdersTab orders={orders} payment={payment} />
+      ) : tab === 'offers' ? (
+        <OffersTab promo={promo} categories={catalog.categories} items={catalog.items} />
       ) : (
       <main className="mx-auto grid max-w-6xl gap-6 px-5 py-8 lg:grid-cols-[1fr_20rem]">
         <section className="order-2 lg:order-1">
@@ -1179,12 +1189,9 @@ function OrderDrawer({ id, onClose }: { id: number; onClose: () => void }) {
                     </li>
                   ))}
                 </ul>
-                <dl className="mt-3 space-y-1">
-                  <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd>{formatPrice(o.subtotal)}</dd></div>
-                  <div className="flex justify-between"><dt className="text-muted">Delivery</dt><dd>{formatPrice(o.deliveryCharge)}</dd></div>
-                  <div className="flex justify-between"><dt className="text-muted">Discount</dt><dd>− {formatPrice(o.discount)}</dd></div>
-                  <div className="flex justify-between border-t border-sand pt-1 text-base font-semibold"><dt>Total to receive</dt><dd>{formatPrice(o.total)}</dd></div>
-                </dl>
+                <div className="mt-3">
+                  <PriceBreakdown b={{ ...orderBreakdown(o), totalLabel: 'Total to receive' }} />
+                </div>
               </section>
 
               <section>
@@ -1304,7 +1311,8 @@ function PaymentSettingsCard({ settings }: { settings: PaymentSettings }) {
     e.preventDefault()
     setStatus({ busy: true })
     try {
-      setValues(await savePaymentSettings({ data: values }))
+      const { delivery_charge, ...rest } = values
+      setValues({ ...(await savePaymentSettings({ data: rest })), delivery_charge })
       setStatus({ ok: true, msg: 'Saved — checkout is updated' })
       await router.invalidate()
     } catch (err) {
@@ -1349,16 +1357,14 @@ function PaymentSettingsCard({ settings }: { settings: PaymentSettings }) {
           Confirmation message
           <textarea rows={3} value={values.payment_confirmation_message} onChange={set('payment_confirmation_message')} className="field mt-1 resize-y text-sm" placeholder="Your payment proof has been submitted. Our team will verify the payment and confirm your order shortly." />
         </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block text-xs text-muted">
-            Delivery charge (Rs.)
-            <input inputMode="numeric" value={values.delivery_charge} onChange={set('delivery_charge')} className="field mt-1 text-sm" placeholder="100" />
-          </label>
-          <label className="block text-xs text-muted">
-            Max proof size (MB)
-            <input inputMode="numeric" value={values.proof_max_mb} onChange={set('proof_max_mb')} className="field mt-1 text-sm" placeholder={String(PROOF_MAX_MB_LIMIT)} />
-          </label>
-        </div>
+        <label className="block text-xs text-muted">
+          Max proof size (MB)
+          <input inputMode="numeric" value={values.proof_max_mb} onChange={set('proof_max_mb')} className="field mt-1 text-sm" placeholder={String(PROOF_MAX_MB_LIMIT)} />
+        </label>
+        <p className="text-xs text-muted">
+          Delivery charges, zones and free delivery are set under{' '}
+          <Link to="/admin" search={{ tab: 'offers' }} className="text-plum underline">Offers &amp; Discounts</Link>.
+        </p>
         <div className="flex items-center justify-between gap-2">
           <p className={`text-xs ${status.ok ? 'text-whatsapp-ink' : 'text-red-700'}`}>{status.msg}</p>
           <button disabled={status.busy || uploading} className="rounded-full bg-plum px-4 py-1.5 text-sm text-ivory disabled:opacity-60">

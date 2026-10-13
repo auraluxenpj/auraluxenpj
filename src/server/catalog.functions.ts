@@ -19,12 +19,16 @@ import {
 import { deleteUploadedImages } from './images.server'
 import { STORE_KEYS, loadCatalog, loadItem } from './catalog.server'
 import { listOrders, loadPaymentSettings } from './orders.server'
+import { loadAdminPromo, loadPublicPromo } from './promo.server'
 import { FREE_SIZE } from '@/lib/catalog'
 import { consumeResetToken, createResetToken, getRecoveryEmail, maskEmail, sendResetEmail } from './recovery.server'
 
 /* ---------- Public ---------- */
 
-export const getCatalog = createServerFn({ method: 'GET' }).handler(() => loadCatalog())
+export const getCatalog = createServerFn({ method: 'GET' }).handler(async () => {
+  const [catalog, promo] = await Promise.all([loadCatalog(), loadPublicPromo()])
+  return { ...catalog, promo }
+})
 
 export const getItem = createServerFn({ method: 'GET' })
   .inputValidator((data: { id: number }) => data)
@@ -54,6 +58,7 @@ export const getAdminState = createServerFn({ method: 'GET' }).handler(async () 
     catalog: loggedIn ? await loadCatalog({ includeHidden: true }) : null,
     orders: loggedIn ? await listOrders() : [],
     payment: loggedIn ? await loadPaymentSettings() : null,
+    promo: loggedIn ? await loadAdminPromo() : null,
   }
 })
 

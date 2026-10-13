@@ -1,11 +1,12 @@
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
-import { AlertCircle, ArrowLeft, Check, Copy, Download, FileText, Landmark, Loader2, Lock, QrCode, RefreshCw, ShoppingBag, Upload, X } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Check, Copy, Download, FileText, Landmark, Loader2, Lock, QrCode, RefreshCw, ShoppingBag, Tag, Upload, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { SiteLayout } from '@/components/SiteChrome'
 import { Wrap } from '@/components/Section'
 import { cdn, formatPrice, whatsappLink } from '@/lib/format'
 import { FREE_SIZE } from '@/lib/catalog'
-import { PROOF_TYPES, checkoutSchema } from '@/lib/orders'
+import { PROOF_TYPES, checkoutSchema, normalizePhone } from '@/lib/orders'
+import { CartMessages, FreeDeliveryNote, PriceBreakdown } from '@/components/Promo'
 import type { Quote } from '@/lib/pricing'
 import { useSite } from '@/lib/site'
 import { bag, placedOrders, qtyOf } from '@/lib/store'
@@ -21,6 +22,7 @@ export const Route = createFileRoute('/checkout')({
 type Customer = { name: string; phone: string; email: string; address: string; city: string; area: string; landmark: string }
 const EMPTY: Customer = { name: '', phone: '', email: '', address: '', city: '', area: '', landmark: '' }
 const KEY_STORAGE = 'auraluxe:checkout-key'
+const COUPON_STORAGE = 'auraluxe:coupon'
 const TIMEOUT_MS = 60_000
 
 /** One key per checkout attempt, kept across reloads/retries so the server never creates a second order. */
@@ -52,22 +54,45 @@ function CheckoutPage() {
   const [submitError, setSubmitError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const busy = useRef(false)
+  const [couponInput, setCouponInput] = useState('')
+  const [coupon, setCoupon] = useState('')
+  const [quoting, setQuoting] = useState(false)
 
-  useEffect(() => setHydrated(true), [])
+  useEffect(() => {
+    setHydrated(true)
+    const saved = sessionStorage.getItem(COUPON_STORAGE) ?? ''
+    setCoupon(saved)
+    setCouponInput(saved)
+  }, [])
+
+  // City decides the delivery zone and phone the per-customer offer limits, so both feed the quote
+  const city = useDebounced(customer.city.trim(), 500)
+  const phone = normalizePhone(useDebounced(customer.phone, 500)) ?? ''
 
   const linesKey = JSON.stringify(lines)
+  const quoteInput = () => ({ lines, couponCode: coupon || undefined, city: city || undefined, phone: phone || undefined })
   useEffect(() => {
     if (!hydrated || !lines.length) return
     let live = true
     setQuoteError('')
-    getCartQuote({ data: { lines } })
+    setQuoting(true)
+    getCartQuote({ data: quoteInput() })
       .then((q) => live && setQuote(q))
       .catch(() => live && setQuoteError('We couldn’t load the latest prices and stock. Check your connection and try again.'))
+      .finally(() => live && setQuoting(false))
     return () => {
       live = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, linesKey, reload])
+  }, [hydrated, linesKey, reload, coupon, city, phone])
+
+  function applyCoupon(code: string) {
+    const next = code.trim().toUpperCase()
+    setCoupon(next)
+    setCouponInput(next)
+    if (next) sessionStorage.setItem(COUPON_STORAGE, next)
+    else sessionStorage.removeItem(COUPON_STORAGE)
+  }
 
   const set = (k: keyof Customer) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setCustomer((c) => ({ ...c, [k]: e.target.value }))
@@ -85,6 +110,9 @@ function CheckoutPage() {
       transactionId,
       paymentDate,
       lines,
+      // Only a coupon the server accepted; the server re-checks it and the total before saving
+      couponCode: quote?.coupon ? coupon : '',
+      expectedTotal: quote?.total,
     })
     const fieldErrors: Record<string, string> = {}
     if (!parsed.success) {
@@ -121,12 +149,13 @@ function CheckoutPage() {
               : 'We could not place your order right now. Please try again in a moment.'),
         )
         // Stock may have changed — refresh the summary so the customer sees what to fix
-        if (res.status === 409) getCartQuote({ data: { lines } }).then(setQuote).catch(() => {})
+        if (res.status === 409) getCartQuote({ data: quoteInput() }).then(setQuote).catch(() => {})
         return
       }
       placedOrders.set((list) => [{ number: json.number!, token: json.token!, at: new Date().toISOString() }, ...list.filter((o) => o.number !== json.number)].slice(0, 20))
       bag.set([])
       sessionStorage.removeItem(KEY_STORAGE)
+      sessionStorage.removeItem(COUPON_STORAGE)
       await router.navigate({ to: '/order/$number', params: { number: json.number }, search: { t: json.token }, replace: true })
     } catch (err) {
       setSubmitError(
@@ -314,15 +343,33 @@ function CheckoutPage() {
                     </li>
                   ))}
                 </ul>
-                <dl className="space-y-2 border-t border-sand pt-3 text-sm">
-                  <Row label="Subtotal" value={formatPrice(quote.subtotal)} />
-                  <Row label="Delivery" value={quote.deliveryCharge ? formatPrice(quote.deliveryCharge) : 'Free'} />
-                  <Row label="Discount" value={quote.discount ? `− ${formatPrice(quote.discount)}` : formatPrice(0)} tone={quote.discount ? 'text-sale' : undefined} />
-                  <div className="flex items-baseline justify-between border-t border-sand pt-3">
-                    <dt className="font-medium">Total</dt>
-                    <dd className="text-xl font-semibold">{formatPrice(quote.total)}</dd>
-                  </div>
-                </dl>
+                <CouponField
+                  value={couponInput}
+                  applied={quote.coupon ? coupon : ''}
+                  error={coupon && !quoting && couponInput === coupon ? quote.couponError : null}
+                  busy={quoting && couponInput.trim().toUpperCase() === coupon && !!coupon}
+                  onChange={setCouponInput}
+                  onApply={() => applyCoupon(couponInput)}
+                  onRemove={() => applyCoupon('')}
+                />
+                <div className="border-t border-sand pt-3">
+                  <PriceBreakdown
+                    b={{
+                      subtotal: quote.subtotal,
+                      saleDiscount: quote.saleDiscount,
+                      offer: quote.offer,
+                      coupon: quote.coupon,
+                      deliveryCharge: quote.deliveryCharge,
+                      deliveryWaived: quote.deliveryWaived,
+                      deliveryZone: quote.deliveryZone,
+                      total: quote.total,
+                    }}
+                  />
+                </div>
+                <div className="mt-3 space-y-2">
+                  <FreeDeliveryNote progress={quote.freeDelivery} knownCity={Boolean(city)} />
+                  <CartMessages />
+                </div>
                 {!quote.ok && (
                   <Link to="/bag" className="mt-3 block text-sm font-medium text-sale underline underline-offset-4">
                     Some pieces need attention — review your bag
@@ -336,7 +383,7 @@ function CheckoutPage() {
                 <AlertCircle className="mt-0.5 size-4 shrink-0" /> {submitError}
               </p>
             )}
-            <button type="submit" disabled={submitting || !quote?.ok} className="btn btn-dark mt-5 min-h-13 w-full text-[0.85rem] disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="submit" disabled={submitting || quoting || !quote?.ok} className="btn btn-dark mt-5 min-h-13 w-full text-[0.85rem] disabled:cursor-not-allowed disabled:opacity-50">
               {submitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" /> Placing order…
@@ -395,11 +442,77 @@ function Input({
   )
 }
 
-function Row({ label, value, tone }: { label: string; value: string; tone?: string }) {
+function useDebounced<T>(value: T, ms: number) {
+  const [v, setV] = useState(value)
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), ms)
+    return () => clearTimeout(t)
+  }, [value, ms])
+  return v
+}
+
+function CouponField({
+  value,
+  applied,
+  error,
+  busy,
+  onChange,
+  onApply,
+  onRemove,
+}: {
+  value: string
+  applied: string
+  error: string | null
+  busy: boolean
+  onChange: (v: string) => void
+  onApply: () => void
+  onRemove: () => void
+}) {
+  if (applied) {
+    return (
+      <div className="mb-3 flex items-center justify-between gap-2 rounded-md border border-dashed border-whatsapp-ink/50 bg-whatsapp/10 px-3 py-2 text-sm">
+        <span className="flex items-center gap-2 font-medium text-whatsapp-ink">
+          <Check className="size-4" /> Coupon <span className="tracking-[0.12em]">{applied}</span> applied
+        </span>
+        <button type="button" onClick={onRemove} className="-my-1 min-h-9 px-2 text-xs font-medium text-muted underline-offset-4 hover:text-sale hover:underline">
+          Remove
+        </button>
+      </div>
+    )
+  }
   return (
-    <div className={`flex justify-between ${tone ?? ''}`}>
-      <dt className={tone ? '' : 'text-muted'}>{label}</dt>
-      <dd>{value}</dd>
+    <div className="mb-3">
+      <label htmlFor="coupon" className="flex items-center gap-1.5 text-xs font-medium">
+        <Tag className="size-3.5 text-gold-deep" /> Coupon code
+      </label>
+      <div className="mt-1.5 flex gap-2">
+        <input
+          id="coupon"
+          value={value}
+          onChange={(e) => onChange(e.target.value.toUpperCase())}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              if (value.trim()) onApply()
+            }
+          }}
+          maxLength={30}
+          autoCapitalize="characters"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="e.g. TIHAR15"
+          aria-invalid={Boolean(error)}
+          className={`field min-h-11 flex-1 uppercase tracking-[0.1em] ${error ? 'border-sale!' : ''}`}
+        />
+        <button type="button" onClick={onApply} disabled={!value.trim() || busy} className="btn btn-outline min-h-11 px-4 disabled:opacity-40">
+          {busy ? <Loader2 className="size-4 animate-spin" /> : 'Apply'}
+        </button>
+      </div>
+      {error && (
+        <p role="alert" className="mt-1.5 flex gap-1.5 text-xs text-sale">
+          <AlertCircle className="mt-px size-3.5 shrink-0" /> {error}
+        </p>
+      )}
     </div>
   )
 }
