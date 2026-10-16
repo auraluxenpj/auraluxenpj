@@ -16,6 +16,7 @@ import { discountLabel } from '@/lib/promo'
 import { cdn, cdnSet, crossedPrice, discountPercent, enquiryMessage, formatPrice, itemBadge, whatsappLink } from '@/lib/format'
 import { PRODUCT_DISCLAIMER, descriptionText, isSoldOut, lookFor, similarItems, sortSizes, stockOf } from '@/lib/catalog'
 import { categoryLabel, useSite } from '@/lib/site'
+import { seo } from '@/lib/seo'
 import { addToBag, bag, markViewed, qtyOf } from '@/lib/store'
 
 export const Route = createFileRoute('/item/$itemId')({
@@ -25,18 +26,20 @@ export const Route = createFileRoute('/item/$itemId')({
     if (!data) throw notFound()
     return data
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.item.name} — Aura Luxe` },
-          { name: 'description', content: descriptionText(loaderData.item.description).slice(0, 160) },
-          { property: 'og:title', content: `${loaderData.item.name} — Aura Luxe` },
-          ...(loaderData.item.images[0]
-            ? [{ property: 'og:image', content: cdn(loaderData.item.images[0], 1200).replace('fm=webp', 'fm=jpg') }]
-            : []),
-        ]
-      : [],
-  }),
+  head: ({ loaderData }) => {
+    if (!loaderData) return { meta: [{ title: 'Piece not found — Aura Luxe' }, { name: 'robots', content: 'noindex' }] }
+    const { item } = loaderData
+    const description = descriptionText(item.description).replace(/^\s*[•*-]\s*/gm, '').replace(/\s+/g, ' ').trim()
+    return seo({
+      title: `${item.name} — Aura Luxe`,
+      description: description
+        ? description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description
+        : `${item.name} from Aura Luxe, a women’s fashion boutique in Nepal. Check sizes and availability on WhatsApp.`,
+      path: `/item/${item.id}`,
+      image: item.images[0] ? cdn(item.images[0], 1200).replace('fm=webp', 'fm=jpg') : undefined,
+      type: 'product',
+    })
+  },
   component: ItemPage,
   notFoundComponent: NotFound,
 })

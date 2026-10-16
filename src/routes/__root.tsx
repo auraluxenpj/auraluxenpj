@@ -1,11 +1,11 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { getCatalog } from '@/server/catalog.functions'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, absoluteUrl } from '@/lib/seo'
 
 import '../styles.css'
 
-const siteName = 'Aura Luxe — Fashion that feels like you'
-const siteDescription =
-  'Aura Luxe is a women’s fashion boutique for bridal, festive and everyday wear. Browse the collection and check availability instantly on WhatsApp.'
+const siteName = SITE_TITLE
+const siteDescription = SITE_DESCRIPTION
 
 export const Route = createRootRoute({
   // Catalog + shop details power the header search, wishlist, bag and every storefront page
@@ -21,8 +21,11 @@ export const Route = createRootRoute({
       { property: 'og:title', content: siteName },
       { property: 'og:description', content: siteDescription },
       { property: 'og:type', content: 'website' },
-      { property: 'og:image', content: '/.netlify/images?url=/img/hero.jpg&w=1200&fm=jpg' },
+      { property: 'og:site_name', content: SITE_NAME },
+      { property: 'og:locale', content: 'en_NP' },
+      { property: 'og:image', content: absoluteUrl('/.netlify/images?url=/img/hero.jpg&w=1200&fm=jpg') },
       { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:image', content: absoluteUrl('/.netlify/images?url=/img/hero.jpg&w=1200&fm=jpg') },
       { name: 'google-site-verification', content: '07Gf3VrXyRZrcUHhLFCdS4XPvifgA2z85rEl6jgJuBk' },
     ],
     links: [

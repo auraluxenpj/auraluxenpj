@@ -1,8 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { loadCatalog } from '@/server/catalog.server'
 import { isOnOffer } from '@/lib/catalog'
-
-const SITE = 'https://auraluxenpj.netlify.app'
+import { SITE_URL as SITE } from '@/lib/seo'
 
 const xmlEscape = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')

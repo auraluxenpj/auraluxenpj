@@ -24,6 +24,7 @@ import {
 } from '@/lib/catalog'
 import type { FilterKey, ShopSearch } from '@/lib/catalog'
 import { useSite } from '@/lib/site'
+import { seo } from '@/lib/seo'
 
 const SORTS = [
   { value: '', label: 'Recommended' },
@@ -47,12 +48,20 @@ export const Route = createFileRoute('/shop')({
     avail: s.avail === 'in' ? 'in' : undefined,
     sort: SORTS.some((o) => o.value && o.value === s.sort) ? (s.sort as ShopSearch['sort']) : undefined,
   }),
-  head: () => ({
-    meta: [
-      { title: 'Shop women’s fashion — Aura Luxe' },
-      { name: 'description', content: 'Browse Aura Luxe kurtas, sarees, lehengas and western wear. Filter by size, price, colour and occasion, then check availability on WhatsApp.' },
-    ],
-  }),
+  head: ({ match, matches }) => {
+    // Filtered, sorted and searched views canonicalise to their collection so only one URL per collection is indexed
+    const c = match.search.c
+    const categories = (matches[0]?.loaderData as { categories?: { id: number; name: string }[] } | undefined)?.categories ?? []
+    const special: Record<string, string> = { new: 'New Arrivals', offers: 'Offers', clearance: 'Clearance', other: 'Other pieces' }
+    const name = c ? special[c] ?? categories.find((cat) => String(cat.id) === c)?.name : undefined
+    return seo({
+      title: name ? `${name} — Shop women’s fashion — Aura Luxe` : 'Shop women’s fashion — Aura Luxe',
+      description: name
+        ? `Browse ${name.toLowerCase()} at Aura Luxe. Filter by size, price, colour and occasion, then check availability on WhatsApp.`
+        : 'Browse Aura Luxe kurtas, sarees, lehengas and western wear. Filter by size, price, colour and occasion, then check availability on WhatsApp.',
+      path: name ? `/shop?c=${encodeURIComponent(c!)}` : '/shop',
+    })
+  },
   component: Shop,
 })
 

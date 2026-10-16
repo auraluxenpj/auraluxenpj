@@ -10,6 +10,7 @@ import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { GREETING, PRICE_RANGES, cdn, cdnSet, crossedPrice, discountPercent, whatsappLink } from '@/lib/format'
 import { OCCASIONS, inPriceRange, isOnOffer, lookFor, newestFirst } from '@/lib/catalog'
 import { useSite } from '@/lib/site'
+import { SITE_DESCRIPTION, SITE_TITLE, seo } from '@/lib/seo'
 
 // Opening hero: the ivory anarkali twirl, paired with the front pose on desktop
 const HERO = ['/img/hero-anarkali-twirl.jpg', '/img/hero-anarkali-front.jpg']
@@ -25,18 +26,23 @@ export const Route = createFileRoute('/')({
   beforeLoad: ({ search }) => {
     if (search.c) throw redirect({ to: '/shop', search: { c: search.c } })
   },
-  head: () => ({
-    links: [
-      {
-        rel: 'preload',
-        as: 'image',
-        href: cdn(HERO[0], 800),
-        imageSrcSet: cdnSet(HERO[0], HERO_WIDTHS),
-        imageSizes: '(min-width: 1024px) 29vw, 100vw',
-        fetchPriority: 'high',
-      },
-    ],
-  }),
+  head: () => {
+    const page = seo({ title: SITE_TITLE, description: SITE_DESCRIPTION, path: '/' })
+    return {
+      meta: page.meta,
+      links: [
+        ...page.links,
+        {
+          rel: 'preload',
+          as: 'image',
+          href: cdn(HERO[0], 800),
+          imageSrcSet: cdnSet(HERO[0], HERO_WIDTHS),
+          imageSizes: '(min-width: 1024px) 29vw, 100vw',
+          fetchPriority: 'high',
+        },
+      ],
+    }
+  },
   component: Home,
 })
 

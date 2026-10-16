@@ -4,14 +4,15 @@ import { Wrap } from '@/components/Section'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { GREETING, whatsappLink } from '@/lib/format'
 import { useSite } from '@/lib/site'
+import { seo } from '@/lib/seo'
 
 export const Route = createFileRoute('/help')({
-  head: () => ({
-    meta: [
-      { title: 'Size guide, FAQs & policies — Aura Luxe' },
-      { name: 'description', content: 'Aura Luxe size guide, how WhatsApp ordering works, store visits, privacy and terms.' },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: 'Size guide, FAQs & policies — Aura Luxe',
+      description: 'Aura Luxe size guide, how WhatsApp ordering works, store visits, privacy and terms.',
+      path: '/help',
+    }),
   component: Help,
 })
 

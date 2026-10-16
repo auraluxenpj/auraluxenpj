@@ -1,2 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /checkout
+Disallow: /order/
+Disallow: /api/orders
+Disallow: /api/upload
+Disallow: /api/payment-proof/
+
+Sitemap: https://auraluxe.com.np/sitemap.xml
