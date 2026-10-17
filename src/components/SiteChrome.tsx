@@ -5,6 +5,7 @@ import { WhatsAppIcon } from './WhatsAppIcon'
 import { AnnouncementBar } from './Promo'
 import { GREETING, cdn, formatPhone, formatPrice, whatsappLink } from '@/lib/format'
 import { searchItems } from '@/lib/catalog'
+import { COLLECTIONS, collectionItems } from '@/lib/collections'
 import { useSite } from '@/lib/site'
 import { bag, searchOpen, wishlist } from '@/lib/store'
 
@@ -354,7 +355,7 @@ export function FloatingWhatsApp({ href, hideOnMobile = false }: { href: string;
 }
 
 export function SiteFooter() {
-  const { whatsapp, store, categories } = useSite()
+  const { whatsapp, store, categories, items } = useSite()
   const catId = (name: string) => categories.find((c) => c.name.toLowerCase().startsWith(name.toLowerCase()))?.id
   const shopLink = (label: string, term: string) => {
     const id = catId(term)
@@ -390,8 +391,9 @@ export function SiteFooter() {
         <FooterColumn title="Shop">
           <Link to="/shop" search={{ c: 'new', sort: 'new' }}>New Arrivals</Link>
           <Link to="/shop" search={{}}>Women</Link>
-          {shopLink('Kurtis', 'kurti')}
-          {shopLink('Sarees', 'saree')}
+          {COLLECTIONS.filter((col) => collectionItems(col, items, categories).length).map((col) => (
+            <Link key={col.slug} to="/collections/$slug" params={{ slug: col.slug }}>{col.label}</Link>
+          ))}
           {shopLink('Western', 'western')}
           {shopLink('Ethnic', 'ethnic')}
           <Link to="/shop" search={{ c: 'offers' }}>Offers</Link>

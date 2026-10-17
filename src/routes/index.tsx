@@ -10,7 +10,8 @@ import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { GREETING, PRICE_RANGES, cdn, cdnSet, crossedPrice, discountPercent, whatsappLink } from '@/lib/format'
 import { OCCASIONS, inPriceRange, isOnOffer, lookFor, newestFirst } from '@/lib/catalog'
 import { useSite } from '@/lib/site'
-import { SITE_DESCRIPTION, SITE_TITLE, seo } from '@/lib/seo'
+import { COLLECTIONS, collectionItems } from '@/lib/collections'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL, absoluteUrl, jsonLd, seo } from '@/lib/seo'
 
 // Opening hero: the ivory anarkali twirl, paired with the front pose on desktop
 const HERO = ['/img/hero-anarkali-twirl.jpg', '/img/hero-anarkali-front.jpg']
@@ -26,10 +27,12 @@ export const Route = createFileRoute('/')({
   beforeLoad: ({ search }) => {
     if (search.c) throw redirect({ to: '/shop', search: { c: search.c } })
   },
-  head: () => {
+  head: ({ matches }) => {
     const page = seo({ title: SITE_TITLE, description: SITE_DESCRIPTION, path: '/' })
+    const root = matches[0]?.loaderData as { whatsapp?: string; store?: Record<string, string> } | undefined
     return {
       meta: page.meta,
+      scripts: [jsonLd(businessSchema(root?.store ?? {}, root?.whatsapp ?? ''))],
       links: [
         ...page.links,
         {
@@ -45,6 +48,30 @@ export const Route = createFileRoute('/')({
   },
   component: Home,
 })
+
+/**
+ * Organization data for search engines, built only from the store details the owner has entered in admin.
+ * It becomes a ClothingStore (a LocalBusiness) once a store address is set.
+ */
+function businessSchema(store: Record<string, string>, whatsapp: string) {
+  const sameAs = [store.instagram, store.tiktok, store.facebook].filter(Boolean)
+  const telephone = store.store_phone || (whatsapp ? `+${whatsapp}` : '')
+  return {
+    '@context': 'https://schema.org',
+    '@type': store.store_address ? 'ClothingStore' : 'Organization',
+    name: SITE_NAME,
+    alternateName: 'AURALUXE',
+    url: `${SITE_URL}/`,
+    image: absoluteUrl(`/.netlify/images?url=${STORE}&w=1200&fm=jpg`),
+    description: SITE_DESCRIPTION,
+    ...(!!telephone && { telephone }),
+    ...(!!store.store_address && {
+      address: { '@type': 'PostalAddress', streetAddress: store.store_address.replace(/\s*\n\s*/g, ', '), addressCountry: 'NP' },
+    }),
+    ...(!!store.store_map_url && { hasMap: store.store_map_url }),
+    ...(sameAs.length > 0 && { sameAs }),
+  }
+}
 
 function Home() {
   const { items } = useSite()
@@ -304,6 +331,7 @@ function Categories() {
   const other = items.filter((i) => i.categoryId == null)
   if (other.length) tiles.push({ id: 'other', name: 'Other', count: other.length, cover: other.find((i) => i.images[0])?.images[0] })
   if (!tiles.length) return null
+  const styles = COLLECTIONS.filter((c) => collectionItems(c, items, categories).length)
 
   const cols = ['', 'md:grid-cols-1', 'md:grid-cols-2', 'md:grid-cols-3', 'md:grid-cols-4', 'md:grid-cols-5'][Math.min(tiles.length, 5)]
   return (
@@ -339,6 +367,16 @@ function Categories() {
           </Link>
         ))}
       </div>
+      {styles.length > 0 && (
+        <nav aria-label="Shop by style" className="mt-6 flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-muted">Shop by style</span>
+          {styles.map((c) => (
+            <Link key={c.slug} to="/collections/$slug" params={{ slug: c.slug }} className="rounded-full border border-sand bg-white px-4 py-2 text-sm transition hover:border-ink">
+              {c.label}
+            </Link>
+          ))}
+        </nav>
+      )}
     </Wrap>
   )
 }
