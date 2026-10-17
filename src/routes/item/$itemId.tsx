@@ -16,7 +16,7 @@ import { discountLabel } from '@/lib/promo'
 import { cdn, cdnSet, crossedPrice, discountPercent, enquiryMessage, formatPrice, itemBadge, whatsappLink } from '@/lib/format'
 import { PRODUCT_DISCLAIMER, descriptionText, isSoldOut, lookFor, similarItems, sortSizes, stockOf } from '@/lib/catalog'
 import { categoryLabel, useSite } from '@/lib/site'
-import { seo } from '@/lib/seo'
+import { SITE_NAME, absoluteUrl, jsonLd, seo } from '@/lib/seo'
 import { addToBag, bag, markViewed, qtyOf } from '@/lib/store'
 
 export const Route = createFileRoute('/item/$itemId')({
@@ -30,15 +30,38 @@ export const Route = createFileRoute('/item/$itemId')({
     if (!loaderData) return { meta: [{ title: 'Piece not found — Aura Luxe' }, { name: 'robots', content: 'noindex' }] }
     const { item } = loaderData
     const description = descriptionText(item.description).replace(/^\s*[•*-]\s*/gm, '').replace(/\s+/g, ' ').trim()
-    return seo({
+    const image = item.images[0] ? cdn(item.images[0], 1200).replace('fm=webp', 'fm=jpg') : undefined
+    const page = seo({
       title: `${item.name} — Aura Luxe`,
       description: description
         ? description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description
         : `${item.name} from Aura Luxe, a women’s fashion boutique in Nepal. Check sizes and availability on WhatsApp.`,
       path: `/item/${item.id}`,
-      image: item.images[0] ? cdn(item.images[0], 1200).replace('fm=webp', 'fm=jpg') : undefined,
+      image,
       type: 'product',
     })
+    // Product rich results need a price, so pieces shown as "Price on request" get none
+    if (item.price == null || !image) return page
+    const url = absoluteUrl(`/item/${item.id}`)
+    const product = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: item.name,
+      image: item.images.slice(0, 4).map((src) => absoluteUrl(cdn(src, 1200).replace('fm=webp', 'fm=jpg'))),
+      ...(!!description && { description: description.slice(0, 5000) }),
+      sku: String(item.id),
+      url,
+      offers: {
+        '@type': 'Offer',
+        url,
+        price: item.price,
+        priceCurrency: 'NPR',
+        availability: isSoldOut(item) ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+        itemCondition: 'https://schema.org/NewCondition',
+        seller: { '@type': 'Organization', name: SITE_NAME },
+      },
+    }
+    return { ...page, scripts: [jsonLd(product)] }
   },
   component: ItemPage,
   notFoundComponent: NotFound,

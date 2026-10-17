@@ -19,6 +19,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
+import { Route as CollectionsSlugRouteImport } from './routes/collections/$slug'
 import { Route as ItemItemIdRouteImport } from './routes/item/$itemId'
 import { Route as OrderNumberRouteImport } from './routes/order/$number'
 import { Route as ApiImagesKeyRouteImport } from './routes/api/images/$key'
@@ -74,6 +75,11 @@ const ApiUploadRoute = ApiUploadRouteImport.update({
   path: '/api/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CollectionsSlugRoute = CollectionsSlugRouteImport.update({
+  id: '/collections/$slug',
+  path: '/collections/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ItemItemIdRoute = ItemItemIdRouteImport.update({
   id: '/item/$itemId',
   path: '/item/$itemId',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/upload': typeof ApiUploadRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/order/$number': typeof OrderNumberRoute
   '/api/images/$key': typeof ApiImagesKeyRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/upload': typeof ApiUploadRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/order/$number': typeof OrderNumberRoute
   '/api/images/$key': typeof ApiImagesKeyRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/upload': typeof ApiUploadRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/order/$number': typeof OrderNumberRoute
   '/api/images/$key': typeof ApiImagesKeyRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/api/orders'
     | '/api/upload'
+    | '/collections/$slug'
     | '/item/$itemId'
     | '/order/$number'
     | '/api/images/$key'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/api/orders'
     | '/api/upload'
+    | '/collections/$slug'
     | '/item/$itemId'
     | '/order/$number'
     | '/api/images/$key'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/api/orders'
     | '/api/upload'
+    | '/collections/$slug'
     | '/item/$itemId'
     | '/order/$number'
     | '/api/images/$key'
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   WishlistRoute: typeof WishlistRoute
   ApiOrdersRoute: typeof ApiOrdersRoute
   ApiUploadRoute: typeof ApiUploadRoute
+  CollectionsSlugRoute: typeof CollectionsSlugRoute
   ItemItemIdRoute: typeof ItemItemIdRoute
   OrderNumberRoute: typeof OrderNumberRoute
   ApiImagesKeyRoute: typeof ApiImagesKeyRoute
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/collections/$slug': {
+      id: '/collections/$slug'
+      path: '/collections/$slug'
+      fullPath: '/collections/$slug'
+      preLoaderRoute: typeof CollectionsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/item/$itemId': {
       id: '/item/$itemId'
       path: '/item/$itemId'
@@ -327,6 +347,7 @@ const rootRouteChildren: RootRouteChildren = {
   WishlistRoute: WishlistRoute,
   ApiOrdersRoute: ApiOrdersRoute,
   ApiUploadRoute: ApiUploadRoute,
+  CollectionsSlugRoute: CollectionsSlugRoute,
   ItemItemIdRoute: ItemItemIdRoute,
   OrderNumberRoute: OrderNumberRoute,
   ApiImagesKeyRoute: ApiImagesKeyRoute,

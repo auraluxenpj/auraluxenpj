@@ -2,9 +2,9 @@
 export const SITE_URL = 'https://auraluxe.com.np'
 
 export const SITE_NAME = 'Aura Luxe'
-export const SITE_TITLE = 'Aura Luxe — Fashion that feels like you'
+export const SITE_TITLE = 'AURALUXE Nepalgunj | Women’s Ethnic Wear'
 export const SITE_DESCRIPTION =
-  'Aura Luxe is a women’s fashion boutique for bridal, festive and everyday wear. Browse the collection and check availability instantly on WhatsApp.'
+  'Women’s ethnic wear at AURALUXE, Nepalgunj: Pakistani suits, co-ord sets, kurtis, sarees and lehengas. Browse the collection and order on WhatsApp.'
 
 export const absoluteUrl = (path: string) => (/^https?:\/\//.test(path) ? path : `${SITE_URL}${path.startsWith('/') ? '' : '/'}${path}`)
 
@@ -41,3 +41,6 @@ export function seo({
   ]
   return { meta, links: [{ rel: 'canonical', href: url }] }
 }
+
+/** JSON-LD <script> entry for a route's head `scripts`. */
+export const jsonLd = (data: object) => ({ type: 'application/ld+json', children: JSON.stringify(data).replace(/</g, '\\u003c') })

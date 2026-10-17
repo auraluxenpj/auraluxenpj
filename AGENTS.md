@@ -19,6 +19,7 @@ AuraLuxe catalog: a boutique lookbook where customers browse pieces and enquire 
 | Shared UI | `src/components/` (`SiteChrome` header/footer/floating button, `ItemCard`, `WhatsAppIcon`) |
 | Formatting, WhatsApp links, Image CDN URLs | `src/lib/format.ts`; client-side photo downscale + upload in `src/lib/upload.ts` |
 | Offers, coupons, delivery zones, free delivery | rules/validation `src/lib/promo.ts`; DB/usage limits/storefront data `src/server/promo.server.ts`; admin RPC `src/server/promo.functions.ts`; admin UI `src/components/OffersAdmin.tsx` (Admin → Offers & Discounts); storefront banner/announcement bar/summary `src/components/Promo.tsx` |
+| SEO landing pages (`/collections/<slug>`: Pakistani suits, co-ord sets, kurtis, sarees, lehengas) | definitions + product matching `src/lib/collections.ts`, page `src/routes/collections/$slug.tsx`; shared meta/JSON-LD helpers `src/lib/seo.ts` |
 | Theme tokens (colours, fonts) | `@theme` block in `src/styles.css` |
 
 ## Key decisions
