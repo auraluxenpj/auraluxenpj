@@ -1,6 +1,4 @@
-diff --git a/src/lib/business-manager/domain.ts b/src/lib/business-manager/domain.ts
-new file mode 100644
---- /dev/null
+
 +++ b/src/lib/business-manager/domain.ts
 @@
 +/**
@@ -193,4 +191,3 @@ new file mode 100644
 +5. Add database schema/migrations only when a safe test database is available.
 +6. Add supplier/purchase flows and double-entry accounting after POS records and
 +   inventory movement rules are stable.
-
