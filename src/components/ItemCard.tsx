@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ImageOff } from 'lucide-react'
+import { ArrowRight, ImageOff } from 'lucide-react'
 import type { Item } from '../../db/schema'
 import { WhatsAppIcon } from './WhatsAppIcon'
 import { WishlistButton } from './WishlistButton'
@@ -25,7 +25,7 @@ export function ItemCard({ item, eager = false }: { item: Item; eager?: boolean 
   return (
     <article className="group flex h-full flex-col">
       <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-cream">
-        <Link to="/item/$itemId" params={params} className="block size-full" tabIndex={-1} aria-hidden="true">
+        <Link to="/item/$itemId" params={params} className="block size-full" aria-label={`View ${item.name}`}>
           {cover ? (
             <>
               <img
@@ -70,7 +70,7 @@ export function ItemCard({ item, eager = false }: { item: Item; eager?: boolean 
       </div>
 
       <div className="flex flex-1 flex-col pt-3">
-        <h3 className="line-clamp-1 text-[0.9rem] font-medium text-ink">
+        <h3 className="line-clamp-2 min-h-[2.6rem] text-[0.9rem] leading-snug font-medium text-ink">
           <Link to="/item/$itemId" params={params} className="hover:underline hover:underline-offset-4">
             {item.name}
           </Link>
@@ -85,16 +85,24 @@ export function ItemCard({ item, eager = false }: { item: Item; eager?: boolean 
             </>
           )}
         </p>
-        <div className="mt-auto pt-3">
-        <a
-          href={whatsappLink(whatsapp, enquiryMessage(item))}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Check availability of ${item.name} on WhatsApp`}
-          className="flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-sand bg-white text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-ink transition hover:border-ink"
-        >
-          <WhatsAppIcon className="size-3.5 text-whatsapp-ink" /> Check availability
-        </a>
+        <div className="mt-auto space-y-2 pt-3">
+          <Link
+            to="/item/$itemId"
+            params={params}
+            aria-label={`View details for ${item.name}`}
+            className="flex min-h-10 items-center justify-center gap-1.5 rounded-md bg-ink px-2 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-ink/85"
+          >
+            View details <ArrowRight className="size-3.5" />
+          </Link>
+          <a
+            href={whatsappLink(whatsapp, enquiryMessage(item))}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Check availability of ${item.name} on WhatsApp`}
+            className="flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-sand bg-white px-2 text-[0.64rem] font-semibold uppercase tracking-[0.08em] text-ink transition hover:border-ink"
+          >
+            <WhatsAppIcon className="size-3.5 text-whatsapp-ink" /> Ask on WhatsApp
+          </a>
         </div>
       </div>
     </article>

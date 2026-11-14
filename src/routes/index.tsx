@@ -117,7 +117,7 @@ function Home() {
         <Wrap className="mt-16 md:mt-24">
           <SectionHeader
             title="Trending Now"
-            subtitle={tagged.length ? 'The pieces everyone is asking about.' : 'Signature pieces, chosen by Aura Luxe.'}
+            subtitle={tagged.length ? 'Styles our team has highlighted for you.' : 'Signature pieces, chosen by Aura Luxe.'}
             action={
               <Link to="/shop" search={{}} className={underlineLink}>
                 Shop all <ArrowRight className="size-3.5" />
@@ -174,10 +174,10 @@ function Hero({ offers }: { offers: Item[] }) {
   const slides: Slide[] = [
     {
       key: 'new',
-      eyebrow: 'Women’s fashion · New collection',
+      eyebrow: 'Women’s ethnic wear · Nepalgunj',
       title: 'AURA LUXE',
-      message: 'Fashion that feels like you.',
-      text: 'Discover styles for every occasion.',
+      message: 'Ethnic wear that feels like you.',
+      text: 'Explore kurtis, co-ord sets, sarees and occasion wear.',
       images: HERO,
       primary: <Link to="/shop" search={{}} className="btn btn-light">Shop Now</Link>,
       secondary: newArrivals,
@@ -320,12 +320,18 @@ function Hero({ offers }: { offers: Item[] }) {
 
 /* ---------------- Shop by category ---------------- */
 
+function displayCategoryName(name: string) {
+  // Some legacy category records repeat the same word (for example, “Sarees Sarees”).
+  // Clean the storefront label without changing the stored category or its ID.
+  return name.replace(/\b([\p{L}\p{N}]+)(?:\s+\1)+\b/giu, '$1')
+}
+
 function Categories() {
   const { categories, items } = useSite()
   const tiles = categories
     .map((c) => {
       const list = items.filter((i) => i.categoryId === c.id)
-      return { id: String(c.id), name: c.name, count: list.length, cover: list.find((i) => i.images[0])?.images[0] }
+      return { id: String(c.id), name: displayCategoryName(c.name), count: list.length, cover: list.find((i) => i.images[0])?.images[0] }
     })
     .filter((t) => t.count > 0)
   const other = items.filter((i) => i.categoryId == null)

@@ -58,7 +58,7 @@ const navClass =
 function NavLinks({ className, onNavigate }: { className: string; onNavigate?: () => void }) {
   return (
     <>
-      <Link to="/shop" search={{}} className={className} onClick={onNavigate}>Women</Link>
+      <Link to="/shop" search={{}} className={className} onClick={onNavigate}>Shop</Link>
       <Link to="/shop" search={{ c: 'new', sort: 'new' }} className={className} onClick={onNavigate}>New Arrivals</Link>
       <Link to="/" hash="categories" className={className} onClick={onNavigate}>Collections</Link>
       <Link to="/shop" search={{ c: 'offers' }} className={className} onClick={onNavigate}>Offers</Link>
