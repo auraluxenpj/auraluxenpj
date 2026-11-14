@@ -160,7 +160,7 @@ function ItemPage() {
         <Gallery item={item} />
 
         {/* Details */}
-        <div className="md:sticky md:top-24 md:self-start">
+        <div className="product-detail-panel md:sticky md:top-24 md:self-start">
           <div className="flex flex-wrap items-center gap-3">
             <Link to="/shop" search={item.categoryId ? { c: String(item.categoryId) } : { c: 'other' }} className="eyebrow hover:underline">
               {category}
