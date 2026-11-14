@@ -294,14 +294,22 @@ function ItemPage() {
 
       <RecentlyViewed exclude={item.id} />
 
-      {/* Mobile: the enquiry action stays in reach, above the bottom navigation */}
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 flex items-center gap-3 border-t border-sand bg-white/95 px-4 py-2.5 backdrop-blur lg:hidden">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-xs text-muted">{size ? `Size ${size}` : sizes.length ? 'Choose a size above' : item.name}{colour ? ` · ${colour}` : ''}</p>
-          <p className="text-sm font-semibold">{formatPrice(item.price)}</p>
+      {/* Mobile: keep both buying paths within reach, above the bottom navigation */}
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 flex items-center gap-2 border-t border-sand bg-white/95 px-3 py-2.5 backdrop-blur lg:hidden">
+        <div className="min-w-0 w-20 shrink-0">
+          <p className="truncate text-[0.65rem] text-muted">{size ? `Size ${size}` : sizes.length ? 'Choose size' : item.name}{colour ? ` · ${colour}` : ''}</p>
+          <p className="truncate text-sm font-semibold">{formatPrice(item.price)}</p>
         </div>
-        <a href={enquireHref} target="_blank" rel="noreferrer" className="btn btn-whatsapp px-4 text-[0.7rem]">
-          <WhatsAppIcon className="size-4" /> Check availability
+        <button
+          onClick={add}
+          disabled={soldOut}
+          aria-label="Add selected size and colour to bag"
+          className="btn btn-outline min-w-0 flex-1 px-2 text-[0.7rem] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <ShoppingBag className="size-4" /> Add
+        </button>
+        <a href={enquireHref} target="_blank" rel="noreferrer" className="btn btn-whatsapp min-w-0 flex-1 px-2 text-[0.7rem]">
+          <WhatsAppIcon className="size-4" /> WhatsApp
         </a>
       </div>
       <div className="h-16 lg:hidden" />
