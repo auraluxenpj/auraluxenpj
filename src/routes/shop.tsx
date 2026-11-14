@@ -174,7 +174,7 @@ function Shop() {
         <nav aria-label="Breadcrumb" className="text-xs text-muted">
           <Link to="/" className="hover:text-ink">Home</Link> <span aria-hidden>/</span> <span className="text-ink">{q ? 'Search' : title}</span>
         </nav>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-2">
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-b border-sand pb-4 sm:pb-5">
           <div>
             {q && <p className="eyebrow">Search results</p>}
             <h1 className="font-display text-3xl tracking-[0.06em] uppercase sm:text-4xl">{title}</h1>
@@ -201,7 +201,7 @@ function Shop() {
               key={col.label}
               onClick={() => update({ c: col.id })}
               aria-pressed={c === col.id}
-              className={`h-9 shrink-0 rounded-md border px-3.5 text-sm transition ${c === col.id ? 'border-ink bg-ink text-white' : 'border-sand bg-white text-ink hover:border-ink'}`}
+              className={`h-10 shrink-0 rounded-full border px-4 text-sm transition ${c === col.id ? 'border-ink bg-ink text-white shadow-sm' : 'border-sand bg-white text-ink hover:border-ink'}`}
             >
               {col.label}
             </button>
@@ -210,8 +210,8 @@ function Shop() {
       </Wrap>
 
       {/* Filter / sort bar */}
-      <div className="sticky top-14 z-30 mt-4 border-y border-sand bg-ivory/95 backdrop-blur lg:top-16 lg:mt-6">
-        <Wrap className="flex h-13 items-center justify-between gap-3">
+      <div className="sticky top-14 z-30 mt-4 border-y border-sand bg-ivory/95 shadow-sm backdrop-blur lg:top-16 lg:mt-6">
+        <Wrap className="flex h-14 items-center justify-between gap-3">
           <button onClick={() => setSheet(true)} className="inline-flex h-10 items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] lg:hidden">
             <SlidersHorizontal className="size-4" /> Filter {activeCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-ink text-[0.6rem] text-white">{activeCount}</span>}
           </button>
@@ -221,7 +221,7 @@ function Shop() {
             <select
               value={search.sort ?? ''}
               onChange={(e) => update({ sort: (e.target.value || undefined) as ShopSearch['sort'] })}
-              className="h-10 cursor-pointer rounded-md border border-sand bg-white px-2 text-sm font-normal tracking-normal normal-case"
+              className="h-10 cursor-pointer rounded-full border border-sand bg-white px-3 text-sm font-normal tracking-normal normal-case"
             >
               {SORTS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -231,9 +231,9 @@ function Shop() {
         </Wrap>
       </div>
 
-      <Wrap className="pt-5 lg:grid lg:grid-cols-[14.5rem_1fr] lg:gap-10 lg:pt-8">
+      <Wrap className="pt-5 lg:grid lg:grid-cols-[15rem_1fr] lg:gap-10 lg:pt-8">
         <aside aria-label="Filters" className="hidden lg:block">
-          <div className="sticky top-36 max-h-[calc(100vh-10rem)] overflow-y-auto pr-2 pb-6">{panel}</div>
+          <div className="sticky top-36 max-h-[calc(100vh-10rem)] overflow-y-auto rounded-xl border border-sand bg-white px-4 py-5 shadow-sm">{panel}</div>
         </aside>
 
         <div className="min-w-0">
@@ -258,7 +258,7 @@ function Shop() {
           )}
 
           {visible.length === 0 ? (
-            <div className="grid place-items-center rounded-lg border border-dashed border-sand bg-white px-6 py-16 text-center">
+            <div className="grid place-items-center rounded-xl border border-dashed border-sand bg-white px-6 py-16 text-center shadow-sm">
               <Sparkles className="size-6 text-gold-deep" />
               <p className="mt-4 font-display text-2xl">{items.length ? 'Nothing matches just yet' : 'New pieces arriving soon'}</p>
               <p className="mt-2 max-w-sm text-sm text-muted">Try another size, colour or collection — or ask us, we may have it in store.</p>
@@ -447,7 +447,7 @@ function FilterSheet({
         aria-modal="true"
         aria-label="Filters"
         onClick={(e) => e.stopPropagation()}
-        className="sheet flex max-h-[88vh] w-full flex-col rounded-t-xl bg-ivory"
+        className="sheet flex max-h-[88vh] w-full flex-col rounded-t-2xl border border-sand bg-ivory shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-sand px-5 py-3">
           <p className="text-sm font-semibold uppercase tracking-[0.14em]">Filters</p>
