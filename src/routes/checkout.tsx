@@ -217,14 +217,15 @@ function CheckoutPage() {
         <Link to="/bag" className="inline-flex h-10 items-center gap-2 text-sm text-muted transition hover:text-ink">
           <ArrowLeft className="size-4" /> Back to bag
         </Link>
-        <h1 className="mt-1 font-display text-3xl tracking-[0.06em] uppercase sm:text-4xl">Checkout</h1>
+        <p className="eyebrow mt-3 mb-1">Almost yours</p>
+        <h1 className="font-display text-3xl tracking-[0.06em] uppercase sm:text-4xl">Checkout</h1>
         <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
           <Lock className="size-3.5" /> Pay by bank transfer or QR, upload your proof, and we’ll verify and confirm.
         </p>
       </Wrap>
 
       <form onSubmit={submit} noValidate>
-        <Wrap className="mt-6 grid gap-6 pb-10 lg:grid-cols-[1fr_24rem] lg:items-start lg:gap-10">
+        <Wrap className="mt-6 grid gap-6 pb-10 lg:grid-cols-[1fr_24rem] lg:items-start lg:gap-8">
           <div className="space-y-6">
             {/* 1 · Customer */}
             <Step n={1} title="Delivery details">
@@ -248,7 +249,7 @@ function CheckoutPage() {
                 <span className="text-sm font-medium">Bank Transfer / QR Payment</span>
               </div>
 
-              <div className="mt-5 rounded-lg border border-gold-soft bg-gradient-to-b from-blush/60 to-white p-5">
+              <div className="mt-5 rounded-xl border border-gold-soft bg-gradient-to-b from-blush/60 to-white p-5 shadow-sm sm:p-6">
                 <p className="eyebrow">Pay to Aura Luxe</p>
                 <p className="mt-2 flex items-baseline justify-between gap-3 border-b border-sand pb-3">
                   <span className="text-sm text-muted">Amount to Pay</span>
@@ -306,7 +307,7 @@ function CheckoutPage() {
           </div>
 
           {/* Summary */}
-          <aside className="rounded-lg border border-sand bg-white p-5 lg:sticky lg:top-24">
+          <aside className="rounded-xl border border-sand bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
             <h2 className="text-[0.7rem] font-semibold uppercase tracking-[0.16em]">Order summary</h2>
             {quoteError && (
               <p className="mt-3 flex gap-1.5 text-sm text-sale">
@@ -404,7 +405,7 @@ function CheckoutPage() {
 
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-sand bg-white p-5 sm:p-6">
+    <section className="rounded-xl border border-sand bg-white p-5 shadow-sm sm:p-6">
       <h2 className="flex items-center gap-3 font-display text-xl">
         <span className="grid size-7 place-items-center rounded-full bg-ink font-sans text-xs font-semibold text-white">{n}</span>
         {title}
