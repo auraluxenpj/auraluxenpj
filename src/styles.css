@@ -137,3 +137,36 @@ body {
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* Rangriti-inspired storefront polish, expressed through AURALUXE's own palette. */
+.product-card {
+  min-width: 0;
+  transition: transform 0.25s ease;
+}
+.product-card-media {
+  isolation: isolate;
+  border-radius: 0.35rem;
+  background: #f1eee8;
+}
+.product-card-media img {
+  backface-visibility: hidden;
+}
+.product-card-primary {
+  min-height: 2.65rem;
+  letter-spacing: 0.12em;
+}
+.section-heading-row {
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--color-sand);
+}
+.storefront-link {
+  text-underline-offset: 4px;
+}
+@media (hover: hover) and (min-width: 768px) {
+  .product-card:hover { transform: translateY(-3px); }
+  .product-card-media img { transition: transform 0.65s cubic-bezier(0.2, 0.7, 0.2, 1); }
+}
+@media (max-width: 639px) {
+  .section-title { letter-spacing: 0.045em; }
+  .product-card-primary { min-height: 2.45rem; font-size: 0.62rem; }
+}
