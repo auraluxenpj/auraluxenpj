@@ -87,7 +87,7 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-sand bg-ivory/95 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-sand/90 bg-ivory/95 shadow-[0_3px_18px_-16px_rgba(17,17,17,0.45)] backdrop-blur-md">
         <div className="mx-auto grid h-14 max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-2 sm:px-4 lg:h-16 lg:grid-cols-[auto_1fr_auto] lg:gap-8 lg:px-8">
           {/* Mobile: menu · logo · wishlist · bag */}
           <button onClick={() => setMenu(true)} className={`${iconBtn} lg:hidden`} aria-label="Open menu" aria-expanded={menu}>

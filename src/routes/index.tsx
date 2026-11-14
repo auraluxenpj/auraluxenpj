@@ -231,7 +231,7 @@ function Hero({ offers }: { offers: Item[] }) {
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
-      className="relative h-[min(76svh,600px)] overflow-hidden bg-ink text-white sm:h-[min(72vh,620px)] lg:h-[min(80vh,660px)]"
+      className="fashion-hero relative h-[min(76svh,600px)] overflow-hidden bg-ink text-white sm:h-[min(72vh,620px)] lg:h-[min(80vh,660px)]"
     >
       {slides.map((s, i) => {
         const current = i === active
@@ -350,7 +350,7 @@ function Categories() {
             key={t.id}
             to="/shop"
             search={{ c: t.id }}
-            className="group relative aspect-[3/4] w-[42vw] max-w-56 shrink-0 snap-start overflow-hidden rounded-lg bg-cream md:w-auto md:max-w-none"
+            className="fashion-category-card group relative aspect-[3/4] w-[42vw] max-w-56 shrink-0 snap-start overflow-hidden rounded-lg bg-cream md:w-auto md:max-w-none"
           >
             {t.cover && (
               <img
@@ -364,7 +364,7 @@ function Categories() {
               />
             )}
             <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" />
-            <span className="absolute inset-x-0 bottom-0 p-3 text-white md:p-4">
+            <span className="fashion-category-caption absolute inset-x-0 bottom-0 p-3 text-white md:p-4">
               <span className="block font-display text-lg leading-tight md:text-xl">{t.name}</span>
               <span className="mt-0.5 flex items-center gap-1 text-[0.68rem] uppercase tracking-[0.16em] text-white/80">
                 {t.count} {t.count === 1 ? 'style' : 'styles'} <ArrowRight className="size-3 transition group-hover:translate-x-0.5" />
@@ -400,7 +400,7 @@ function Offers({ offers }: { offers: Item[] }) {
   const cover = offers.find((i) => i.images[0])?.images[0]
   return (
     <Wrap className="mt-16 md:mt-24">
-      <section aria-labelledby="offers-title" className="grid overflow-hidden rounded-xl bg-ink text-white md:grid-cols-[1.1fr_1fr]">
+      <section aria-labelledby="offers-title" className="fashion-offer-panel grid overflow-hidden rounded-xl bg-ink text-white md:grid-cols-[1.1fr_1fr]">
         <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
           <p className="text-[0.7rem] font-medium uppercase tracking-[0.28em] text-gold">Aura Luxe Specials</p>
           <h2 id="offers-title" className="mt-3 font-display text-4xl leading-tight sm:text-5xl">

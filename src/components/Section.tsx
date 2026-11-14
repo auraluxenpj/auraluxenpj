@@ -15,7 +15,7 @@ export function SectionHeader({
   id?: string
 }) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4 md:mb-8">
+    <div className="section-heading-row mb-6 flex items-end justify-between gap-4 md:mb-8">
       <div>
         <h2 id={id} className="section-title">{title}</h2>
         {subtitle && <p className="mt-1.5 text-sm text-muted">{subtitle}</p>}
@@ -27,7 +27,7 @@ export function SectionHeader({
 
 /** Underlined "View all →" style used for section actions. */
 export const underlineLink =
-  'inline-flex shrink-0 items-center gap-1.5 border-b border-ink pb-0.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink transition hover:border-gold hover:text-gold-deep'
+  'storefront-link inline-flex shrink-0 items-center gap-1.5 border-b border-ink pb-0.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink transition hover:border-gold hover:text-gold-deep'
 
 export const Wrap = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</div>

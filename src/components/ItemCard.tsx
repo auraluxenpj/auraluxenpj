@@ -23,8 +23,8 @@ export function ItemCard({ item, eager = false }: { item: Item; eager?: boolean 
   const params = { itemId: String(item.id) }
 
   return (
-    <article className="group flex h-full flex-col">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-cream">
+    <article className="product-card group flex h-full flex-col">
+      <div className="product-card-media relative aspect-[4/5] overflow-hidden rounded-lg bg-cream">
         <Link to="/item/$itemId" params={params} className="block size-full" aria-label={`View ${item.name}`}>
           {cover ? (
             <>
@@ -90,7 +90,7 @@ export function ItemCard({ item, eager = false }: { item: Item; eager?: boolean 
             to="/item/$itemId"
             params={params}
             aria-label={`View details for ${item.name}`}
-            className="flex min-h-10 items-center justify-center gap-1.5 rounded-md bg-ink px-2 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-ink/85"
+            className="product-card-primary flex min-h-10 items-center justify-center gap-1.5 rounded-md bg-ink px-2 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-ink/85"
           >
             View details <ArrowRight className="size-3.5" />
           </Link>
