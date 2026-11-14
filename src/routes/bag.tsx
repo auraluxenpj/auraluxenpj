@@ -50,26 +50,27 @@ function BagPage() {
   return (
     <SiteLayout chatHref={lines.length ? href : undefined}>
       <Wrap className="pt-8 md:pt-12">
+        <p className="eyebrow mb-2">Your selection</p>
         <h1 className="font-display text-3xl tracking-[0.06em] uppercase sm:text-4xl">Your Bag</h1>
         <p className="mt-1 text-sm text-muted">Order online with bank transfer / QR, or send every piece in one WhatsApp message.</p>
 
         {lines.length === 0 ? (
-          <div className="mt-8 grid place-items-center rounded-lg border border-dashed border-sand bg-white px-6 py-16 text-center">
+          <div className="mt-8 grid place-items-center rounded-xl border border-dashed border-sand bg-white px-6 py-16 text-center shadow-sm">
             <ShoppingBag className="size-7 text-gold-deep" strokeWidth={1.5} />
             <p className="mt-4 font-display text-2xl">Your bag is empty</p>
             <p className="mt-2 max-w-sm text-sm text-muted">Choose a size on any product page and add it to your bag.</p>
             <Link to="/shop" search={{}} className="btn btn-dark mt-6">Browse the collection</Link>
           </div>
         ) : (
-          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem] lg:items-start">
-            <ul className="divide-y divide-sand rounded-lg border border-sand bg-white">
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_22rem] lg:items-start lg:gap-8">
+            <ul className="divide-y divide-sand overflow-hidden rounded-xl border border-sand bg-white shadow-sm">
               {lines.map(({ item, index, size, colour, qty }, i) => {
                 const q = quote.lines[i]
                 const sized = item!.sizes.length > 0
                 const max = Math.max(1, stockOf(item!, size))
                 return (
-                  <li key={`${item!.id}-${size}-${colour}-${index}`} className="flex gap-4 p-4">
-                    <Link to="/item/$itemId" params={{ itemId: String(item!.id) }} className="aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-md bg-cream sm:w-24">
+                  <li key={`${item!.id}-${size}-${colour}-${index}`} className="flex gap-4 p-4 transition-colors hover:bg-cream/20 sm:gap-5 sm:p-5">
+                    <Link to="/item/$itemId" params={{ itemId: String(item!.id) }} className="aspect-[4/5] w-24 shrink-0 overflow-hidden rounded-lg bg-cream sm:w-28">
                       {item!.images[0] && <img src={cdn(item!.images[0], 200)} alt="" loading="lazy" className="size-full object-cover" />}
                     </Link>
                     <div className="min-w-0 flex-1">
@@ -139,8 +140,11 @@ function BagPage() {
               })}
             </ul>
 
-            <aside className="rounded-lg border border-sand bg-white p-5 lg:sticky lg:top-24">
-              <p className="mb-3 text-xs text-muted">{pieces} {pieces === 1 ? 'piece' : 'pieces'}</p>
+            <aside className="rounded-xl border border-sand bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
+              <div className="mb-4 flex items-center justify-between border-b border-sand pb-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Order summary</p>
+                <p className="rounded-full bg-cream px-3 py-1 text-xs font-medium tabular-nums">{pieces} {pieces === 1 ? 'piece' : 'pieces'}</p>
+              </div>
               <PriceBreakdown
                 b={{
                   subtotal: quote.subtotal,
