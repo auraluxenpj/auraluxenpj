@@ -1,6 +1,6 @@
-# AuraLuxe — Catalog
+# AuraLuxe — Fashion Shop 
 
-The online lookbook for **AuraLuxe**, a fashion boutique in Kathmandu. Customers browse every piece with photos, colours, sizes and prices, then tap **Enquire on WhatsApp** to start a chat that already names the piece, their chosen size/colour and a link back to it. The shop owner manages the catalog from a password-protected admin page.
+The online lookbook for **AuraLuxe**, a fashion boutique in Nepalgunj. Customers browse every piece with photos, colours, sizes and prices, then tap **Enquire on WhatsApp** to start a chat that already names the piece, their chosen size/colour and a link back to it. The shop owner manages the catalog from a password-protected admin page.
 
 ## Features
 
